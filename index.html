@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Nursing Research - بنك الأسئلة</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: linear-gradient(135deg, #0a1a2e 0%, #0d2b3e 100%); font-family: 'Segoe UI', 'Tajawal', 'Cairo', sans-serif; color: #eef4ff; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .main-btn, .stage-btn, .nav-btn { background: #1e5a7a; border: none; padding: 10px 20px; margin: 5px; border-radius: 30px; color: white; cursor: pointer; font-size: 16px; }
+        .stage-btn { background: #0e3752; }
+        .back-btn { background: #3a6b47; border: none; padding: 10px 20px; border-radius: 30px; color: white; cursor: pointer; margin-bottom: 15px; display: inline-block; }
+        .quiz-card { background: #0b1e2c; border-radius: 20px; padding: 20px; border: 1px solid #2b5c7c; margin-top: 20px; display: none; }
+        .quiz-card.active { display: block; }
+        .question-text { font-size: 18px; font-weight: bold; margin-bottom: 20px; border-bottom: 1px solid #2c6285; padding-bottom: 10px; line-height: 1.6; }
+        .option-item { background: #0e2638; border-radius: 15px; padding: 12px; margin: 8px 0; border: 1px solid #2d6385; cursor: pointer; }
+        .option-correct { background: #10b981; border-color: #10b981; }
+        .option-wrong { background: #ef4444; border-color: #ef4444; }
+        .feedback { background: #021a28; border-radius: 12px; padding: 12px; margin: 10px 0; border-right: 4px solid #3b82f6; }
+        .feedback.correct { border-right-color: #10b981; background: #06212e; }
+        .feedback.wrong { border-right-color: #ef4444; background: #1f1a2e; }
+        .score-board { background: #071e2c; padding: 5px 15px; border-radius: 25px; display: inline-block; margin-bottom: 15px; }
+        .nav-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .nav-btn { flex: 1; }
+        .hidden { display: none; }
+        .small-back { background: #3a6b47; border: none; padding: 5px 12px; border-radius: 20px; color: white; cursor: pointer; font-size: 12px; margin-bottom: 10px; display: inline-block; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="mainMenu">
+        <div style="text-align:center; margin-bottom:20px;"><h2>🔬 Nursing Research - بنك الأسئلة</h2></div>
+        <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center;">
+            <button class="main-btn" id="mcqBtn">📖 اختر الإجابة</button>
+            <button class="main-btn" id="tfBtn">✅ صح / خطأ</button>
+        </div>
+    </div>
+
+    <div id="stagesMenu" class="hidden">
+        <button class="back-btn" id="backToMainBtn">🏠 رجوع للرئيسية</button>
+        <div id="stagesList" style="margin-top:20px; text-align:center;"></div>
+    </div>
+
+    <div id="quizArea" class="quiz-card">
+        <button class="small-back" id="backToStagesBtn">🔙 رجوع</button>
+        <div class="score-board" id="scoreDisplay">⭐ 0/0</div>
+        <div class="question-text" id="questionText"></div>
+        <div id="optionsDiv"></div>
+        <div id="feedbackDiv"></div>
+        <div class="nav-buttons">
+            <button class="nav-btn" id="prevBtn">◀ السابق</button>
+            <button class="nav-btn" id="nextBtn">التالي ▶</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ===================== أسئلة الاختيار من متعدد (MCQ) =====================
+const mcqData = [
+    { text: "Quantitative research purpose:", options: ["Discover ideas.", "Understand human behavior.", "Test hypotheses.", "Gain deep understanding."], correct: "Test hypotheses.", exp: "اختبار الفروض هو هدف البحث الكمي." },
+    { text: "All are requirements of Reviewing the literature Except:", options: ["Reading clinical research.", "Finding the keywords of the question.", "Using keywords.", "Searching Medical Electronic databases."], correct: "Finding the keywords of the question.", exp: "البحث عن الكلمات المفتاحية ليس متطلباً لمراجعة الأدبيات." },
+    { text: "Ethics principles include:", options: ["Justice.", "Informed consent.", "Prediction.", "Answer question."], correct: "Justice.", exp: "العدالة هي أحد مبادئ الأخلاقيات (Justice, Beneficence, Respect)." },
+    { text: "Steps of the research include:", options: ["Planning for the study.", "Data collection.", "Piloting study.", "All of them."], correct: "All of them.", exp: "جميع ما سبق هي خطوات البحث." },
+    { text: "Vulnerable Research Subjects:", options: ["Comatose people.", "Competent adult.", "The patient's legally authorized representative.", "All of them."], correct: "Comatose people.", exp: "المرضى في غيبوبة من الفئات الضعيفة (Vulnerable)." },
+    { text: "Requirements of developing a research idea include:", options: ["Screening.", "Critical thinking.", "Using keywords.", "Data entry."], correct: "Critical thinking.", exp: "التفكير النقدي ضروري لتطوير فكرة بحثية." },
+    { text: "Quantitative research are:", options: ["Systematical investigation.", "Behavior sciences.", "Based thinking.", "Flexible."], correct: "Systematical investigation.", exp: "البحث الكمي هو تحقيق منهجي." },
+    { text: "The specific purpose of nursing research includes:", options: ["Identification.", "Control of the problem.", "Prediction.", "All of the above."], correct: "All of the above.", exp: "التعريف، التحكم، والتنبؤ كلها أهداف للبحث." },
+    { text: "For planning the study you need to:", options: ["Discuss the study details with your team.", "Clinical background.", "C. (a & b).", "Using keywords."], correct: "C. (a & b).", exp: "تحتاج لمناقشة التفاصيل والخلفية الإكلينيكية." },
+    { text: "Research conducted with human subjects:", options: ["Correlation research.", "Survey research.", "Comparative research.", "Patient-oriented research."], correct: "Patient-oriented research.", exp: "البحث الذي يجرى على البشر يسمى Patient-oriented research." },
+    { text: "Searching medical electronic database and using keywords are the step of:", options: ["Planning for the study.", "Developing a research idea.", "Reviewing the literature.", "D. (a and b)."], correct: "Reviewing the literature.", exp: "البحث في قواعد البيانات هو خطوة مراجعة الأدبيات." },
+    { text: "Publication requirements:", options: ["Presentation skills.", "Experience in journal selection.", "Experience in journal selection.", "All of the above."], correct: "All of the above.", exp: "مهارات العرض والخبرة في اختيار المجلة كلها متطلبات للنشر." }
+];// ===================== أسئلة صح/خطأ (True/False) =====================
+const tfData = [
+    { text: "Qualitative research is collected data and presented in the numbers.", correct: false, exp: "البحث النوعي لا يعتمد على الأرقام (البحث الكمي هو الذي يعتمد عليها)." },
+    { text: "A structured questionnaire has an open-ended question.", correct: false, exp: "الاستبيان المغلق (Structured) يكون أسئلته مغلقة (Close-ended)." },
+    { text: "Formulating hypothesis being aware of types of hypotheses.", correct: true, exp: "صياغة الفرضية تتطلب معرفة أنواعها." },
+    { text: "Independent review allows evaluation of research.", correct: true, exp: "المراجعة المستقلة تسمح بتقييم البحث." },
+    { text: "The research should describe the limitations of the study.", correct: true, exp: "يجب أن يصف البحث قيود (Limitations) الدراسة." },
+    { text: "Quantitative research is based on thinking.", correct: false, exp: "البحث الكمي يعتمد على الأرقام والإحصاء وليس التفكير فقط." },
+    { text: "Requirements of data entry are interpretation of statistical analysis results.", correct: false, exp: "إدخال البيانات ليس تفسيراً للنتائج الإحصائية." },
+    { text: "The procedure of the research should be described in sufficient details.", correct: true, exp: "يجب وصف إجراءات البحث بتفاصيل كافية." },
+    { text: "High ethical standards should be applied and reported frankly.", correct: true, exp: "يجب تطبيق المعايير الأخلاقية العالية والإبلاغ عنها بصراحة." },
+    { text: "The last step in research is publication.", correct: true, exp: "النشر هو الخطوة الأخيرة في البحث." },
+    { text: "The main purpose of the research should be clearly defined.", correct: true, exp: "يجب تحديد الغرض الرئيسي من البحث بوضوح." },
+    { text: "Protecting confidential is one of the contain respect for subjects.", correct: true, exp: "حماية السرية هي جزء من احترام المشاركين." },
+    { text: "Writing the study protocol is requirement of planning for the study.", correct: true, exp: "كتابة بروتوكول الدراسة من متطلبات التخطيط." },
+    { text: "Ethical clinical research should answer valuable question.", correct: true, exp: "البحث الإكلينيكي الأخلاقي يجب أن يجيب على سؤال ذو قيمة." },
+    { text: "Scientific base of the research based on hypothesis only.", correct: false, exp: "الأساس العلمي للبحث لا يعتمد على الفرضية فقط." },
+    { text: "Good research originate with a novel questions.", correct: true, exp: "البحث الجيد يبدأ بأسئلة جديدة (Novel)." },
+    { text: "The procedure design of the research should be carefully planned.", correct: true, exp: "تصميم الإجراءات يجب أن يكون مخططاً له بعناية." },
+    { text: "Conclusion should be on the basis of guessing.", correct: false, exp: "الاستنتاج لا يجب أن يكون على أساس التخمين." },
+    { text: "Qualitative research is more flexible.", correct: true, exp: "البحث النوعي أكثر مرونة." },
+    { text: "Qualitative research more difficult to code data.", correct: true, exp: "البيانات النوعية أصعب في الترميز." },
+    { text: "Generate large amount of data for quantitative research.", correct: false, exp: "البحث الكمي لا يولد كمية كبيرة من البيانات مقارنة بالنوعي." },
+    { text: "Qualitative research small number of non-representative cases.", correct: true, exp: "البحث النوعي يعتمد على حالات قليلة وغير ممثلة إحصائياً." },
+    { text: "Participation is voluntary means without pressure.", correct: true, exp: "المشاركة الطوعية تعني بدون ضغط." },
+    { text: "Qualitative research is based on numbers.", correct: false, exp: "البحث النوعي لا يعتمد على الأرقام." },
+    { text: "Conclusion should not be on the basis of data analysis.", correct: false, exp: "الاستنتاج يجب أن يكون على أساس تحليل البيانات." },
+    { text: "Invito studies are considered patient-oriented research.", correct: false, exp: "دراسات In vitro (في المعمل) ليست على مرضى." },
+    { text: "Developing a research idea requires the researcher to be aware of the types of hypothesis.", correct: true, exp: "تطوير فكرة البحث يتطلب معرفة أنواع الفروض." },
+    { text: "Ethical research requires continued respect for participants' rights.", correct: true, exp: "البحث الأخلاقي يتطلب احتراماً مستمراً لحقوق المشاركين." },
+    { text: "The principle of justice requires fair and equitable distribution of risks and benefits of research.", correct: true, exp: "مبدأ العدالة يتطلب توزيعاً عادلاً للمخاطر والفوائد." },
+    { text: "A structured questionnaire has close-ended questions.", correct: true, exp: "الاستبيان المغلق يحتوي على أسئلة مغلقة." },
+    { text: "High ethical standards of the research should be applied and reported unfrank.", correct: false, exp: "يجب الإبلاغ عنها بصراحة (Frankly) وليس العكس." },
+    { text: "During quantitative study design the researcher uninvolved observer, results are objective.", correct: true, exp: "في البحث الكمي الباحث مراقب غير متدخل والنتائج موضوعية." },
+    { text: "Researcher should be a person of integrity and has a good reputation.", correct: true, exp: "الباحث يجب أن يكون شخصاً نزيهاً وذا سمعة طيبة." },
+    { text: "Qualitative research is aimed at gaining deep understanding of a specific organization or event.", correct: true, exp: "البحث النوعي يهدف للفهم العميق لمنظمة أو حدث معين." },
+    { text: "Respect for Persons requires researchers to maximize the potential benefits to the subjects and minimize the potential risks.", correct: false, exp: "هذا تعريف (Beneficence) وليس (Respect for Persons)." },
+    { text: "Respondents of quantitative research have limited options.", correct: true, exp: "المستجيبون في البحث الكمي لديهم خيارات محدودة (اختيار من متعدد)." },
+    { text: "Children may be required to assent, they can legally consent to participate in research.", correct: false, exp: "الأطفال يعطون موافقة (Assent) لكن لا يمكنهم الموافقة القانونية (Consent)." },
+    { text: "Specific purpose of research is an ongoing process of correcting and refining hypotheses.", correct: true, exp: "البحث هو عملية مستمرة لتصحيح وتحسين الفروض." },
+    { text: "Research is formal, scientific and systematic process.", correct: true, exp: "البحث هو عملية رسمية وعلمية ومنهجية." },
+    { text: "The study or the procedure design of the research should be planned to produce results nearly not related to the purpose as possible.", correct: false, exp: "يجب أن تكون النتائج مرتبطة بالغرض تماماً." },
+    { text: "Qualitative research methods originated in the social and behavioral sciences: sociology, anthropology and psychology.", correct: true, exp: "البحث النوعي نشأ في العلوم الاجتماعية والسلوكية." },
+    { text: "Main goal of research is to answer questions and solve problems.", correct: true, exp: "الهدف الرئيسي للبحث هو الإجابة على الأسئلة وحل المشكلات." },
+    { text: "Quantitative research is not based on the thinking.", correct: true, exp: "البحث الكمي يعتمد على الأرقام والقياس وليس التفكير المجرد." }
+];
+
+// ===================== دوال التقسيم =====================
+function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        let j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+function getMCQStage(stage) {
+    let copy = [...mcqData];
+    if (stage === 1) return shuffleArray(copy.slice(0, 6));
+    return shuffleArray(copy.slice(6, 12));
+}
+
+function getTFStage(stage) {
+    let copy = [...tfData];
+    if (stage === 1) return shuffleArray(copy.slice(0, 14));
+    if (stage === 2) return shuffleArray(copy.slice(14, 28));
+    return shuffleArray(copy.slice(28, 42));
+}// ===================== المتغيرات العامة =====================
+let currentList = [], currentIndex = 0, currentType = "", currentStage = 0;
+let userAnswers = [], answered = false;
+
+function resetQuizState() {
+    currentList = [];
+    currentIndex = 0;
+    userAnswers = [];
+    answered = false;
+}
+
+function backToMain() {
+    resetQuizState();
+    document.getElementById("mainMenu").classList.remove("hidden");
+    document.getElementById("stagesMenu").classList.add("hidden");
+    document.getElementById("quizArea").classList.remove("active");
+}
+
+function backToStages() {
+    resetQuizState();
+    document.getElementById("quizArea").classList.remove("active");
+    document.getElementById("stagesMenu").classList.remove("hidden");
+}
+
+function showStages(type) {
+    resetQuizState();
+    currentType = type;
+    let html = "";
+    if (type === "mcq") {
+        html = `<button class="stage-btn" onclick="startStage(1, 'mcq')">🎯 المرحلة 1 (6 أسئلة)</button>
+                <button class="stage-btn" onclick="startStage(2, 'mcq')">⭐ المرحلة 2 (6 أسئلة)</button>`;
+    } else if (type === "tf") {
+        html = `<button class="stage-btn" onclick="startStage(1, 'tf')">🎯 المرحلة 1 (14 سؤال)</button>
+                <button class="stage-btn" onclick="startStage(2, 'tf')">⭐ المرحلة 2 (14 سؤال)</button>
+                <button class="stage-btn" onclick="startStage(3, 'tf')">🏆 المرحلة 3 (14 سؤال)</button>`;
+    }
+    document.getElementById("stagesList").innerHTML = html;
+    document.getElementById("mainMenu").classList.add("hidden");
+    document.getElementById("stagesMenu").classList.remove("hidden");
+}
+
+function startStage(stage, type) {
+    resetQuizState();
+    currentStage = stage;
+    if (type === "mcq") currentList = getMCQStage(stage);
+    else if (type === "tf") currentList = getTFStage(stage);
+    currentIndex = 0;
+    document.getElementById("stagesMenu").classList.add("hidden");
+    setTimeout(() => {
+        renderQuiz();
+    }, 20);
+}
+
+function renderQuiz() {
+    if (currentIndex >= currentList.length) {
+        let correct = 0;
+        for (let i = 0; i < userAnswers.length; i++) if (userAnswers[i] && userAnswers[i].correct) correct++;
+        let wrongList = "";
+        for (let i = 0; i < userAnswers.length; i++) {
+            let a = userAnswers[i];
+            if (a && !a.correct) {
+                wrongList += `<li style="margin-bottom:10px;"><strong>${currentList[i].text}</strong><br>✅ الإجابة الصحيحة: ${a.correctAns}<br>📘 ${a.exp}</li>`;
+            }
+        }
+        let wrongSection = wrongList ? `<div style="background:#071e2c; padding:15px; border-radius:15px; margin-top:15px;"><h3>❌ الأخطاء:</h3><ul style="list-style:none;">${wrongList}</ul></div>` : "<div style='background:#06212e; padding:15px; border-radius:15px; margin-top:15px;'>🎉 لا توجد أخطاء! إتقان رائع 🎉</div>";
+        document.getElementById("quizArea").innerHTML = `<button class="small-back" onclick="backToStages()">🔙 رجوع للمراحل</button>
+            <div style="text-align:center"><h2>🎉 انتهى الاختبار</h2><p>درجتك: ${correct}/${currentList.length}</p>${wrongSection}</div>`;
+        document.getElementById("quizArea").classList.add("active");
+        return;
+    }
+    let q = currentList[currentIndex];
+    let correctCount = 0;
+    for (let i = 0; i < userAnswers.length; i++) if (userAnswers[i] && userAnswers[i].correct) correctCount++;
+    document.getElementById("scoreDisplay").innerHTML = `⭐ ${correctCount}/${currentList.length}`;
+    document.getElementById("questionText").innerHTML = (currentIndex + 1) + ". " + q.text;
+    
+    if (currentType === "mcq") {
+        let optsHtml = "";
+        for (let i = 0; i < q.options.length; i++) {
+            let opt = q.options[i];
+            optsHtml += `<div class="option-item" onclick="checkMCQ(this, '${opt.replace(/'/g, "\\'")}', '${q.correct.replace(/'/g, "\\'")}', '${q.exp.replace(/'/g, "\\'")}')">${opt}</div>`;
+        }
+        document.getElementById("optionsDiv").innerHTML = optsHtml;
+    } else if (currentType === "tf") {
+        let optsHtml = `<div class="option-item" onclick="checkTF(this, true, ${q.correct}, '${q.exp.replace(/'/g, "\\'")}')">✅ صح (True)</div>
+                        <div class="option-item" onclick="checkTF(this, false, ${q.correct}, '${q.exp.replace(/'/g, "\\'")}')">❌ خطأ (False)</div>`;
+        document.getElementById("optionsDiv").innerHTML = optsHtml;
+    }
+    
+    document.getElementById("feedbackDiv").innerHTML = "";
+    if (userAnswers[currentIndex]) {
+        let a = userAnswers[currentIndex];
+        document.getElementById("feedbackDiv").innerHTML = `<div class="feedback ${a.correct ? 'correct' : 'wrong'}"><strong>${a.correct ? '✅ صحيح' : '❌ خطأ'}</strong><br>📘 ${a.exp}</div>`;
+        answered = true;
+    } else { answered = false; }
+    document.getElementById("quizArea").classList.add("active");
+}
+
+function checkMCQ(element, selected, correct, exp) {
+    if (answered) return;
+    let isCorrect = (selected === correct);
+    let allOpts = document.querySelectorAll("#optionsDiv .option-item");
+    for (let i = 0; i < allOpts.length; i++) allOpts[i].classList.remove("option-correct", "option-wrong");
+    if (isCorrect) {
+        element.classList.add("option-correct");
+    } else {
+        element.classList.add("option-wrong");
+        for (let i = 0; i < allOpts.length; i++) {
+            if (allOpts[i].innerText === correct) allOpts[i].classList.add("option-correct");
+        }
+    }
+    userAnswers[currentIndex] = { correct: isCorrect, exp: exp, correctAns: correct };
+    document.getElementById("feedbackDiv").innerHTML = `<div class="feedback ${isCorrect ? 'correct' : 'wrong'}"><strong>${isCorrect ? '✅ صحيح' : '❌ خطأ'}</strong><br>📘 الإجابة الصحيحة: ${correct}<br>${exp}</div>`;
+    answered = true;
+}
+
+function checkTF(element, userBool, correct, exp) {
+    if (answered) return;
+    let isCorrect = (userBool === correct);
+    let allOpts = document.querySelectorAll("#optionsDiv .option-item");
+    for (let i = 0; i < allOpts.length; i++) allOpts[i].classList.remove("option-correct", "option-wrong");
+    if (isCorrect) {
+        element.classList.add("option-correct");
+    } else {
+        element.classList.add("option-wrong");
+        for (let i = 0; i < allOpts.length; i++) {
+            if ((allOpts[i].innerText.includes("صح") && correct === true) || (allOpts[i].innerText.includes("خطأ") && correct === false)) {
+                allOpts[i].classList.add("option-correct");
+            }
+        }
+    }
+    userAnswers[currentIndex] = { correct: isCorrect, exp: exp, correctAns: correct ? "صح (True)" : "خطأ (False)" };
+    document.getElementById("feedbackDiv").innerHTML = `<div class="feedback ${isCorrect ? 'correct' : 'wrong'}"><strong>${isCorrect ? '✅ صحيح' : '❌ خطأ'}</strong><br>📘 الإجابة الصحيحة: ${correct ? "صح (True)" : "خطأ (False)"}<br>${exp}</div>`;
+    answered = true;
+}
+
+function moveNext() {
+    if (!answered) {
+        document.getElementById("feedbackDiv").innerHTML = '<div class="feedback wrong"><strong>⚠️ تنبيه</strong><br>الرجاء الإجابة على السؤال أولاً</div>';
+        return;
+    }
+    if (currentIndex + 1 < currentList.length) { 
+        currentIndex++; 
+        answered = false; 
+        renderQuiz(); 
+    } else { 
+        currentIndex++; 
+        renderQuiz(); 
+    }
+}
+
+function movePrev() { 
+    if (currentIndex > 0) { 
+        currentIndex--; 
+        answered = false; 
+        renderQuiz(); 
+    } 
+}
+
+// ===================== ربط الأزرار =====================
+document.getElementById("mcqBtn").onclick = () => showStages("mcq");
+document.getElementById("tfBtn").onclick = () => showStages("tf");
+document.getElementById("backToMainBtn").onclick = backToMain;
+document.getElementById("backToStagesBtn").onclick = backToStages;
+document.getElementById("nextBtn").onclick = moveNext;
+document.getElementById("prevBtn").onclick = movePrev;
+
+window.backToMain = backToMain;
+window.backToStages = backToStages;
+window.showStages = showStages;
+window.startStage = startStage;
+window.checkMCQ = checkMCQ;
+window.checkTF = checkTF;
+</script>
+</body>
+</html>
